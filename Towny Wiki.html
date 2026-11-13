@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Towny Wiki | Sunucu Rehberi & Komutlar</title>
+  <style>
+    :root {
+      --bg-main: #0f1117;
+      --bg-sidebar: #141720;
+      --bg-card: #181c27;
+      --bg-hover: #212636;
+      --border: #262c3d;
+      --text-main: #e6e9f0;
+      --text-muted: #949db5;
+      --accent: #22c55e;
+      --accent-soft: rgba(34, 197, 94, 0.14);
+      --gold: #f59e0b;
+      --gold-soft: rgba(245, 158, 11, 0.14);
+      --blue: #38bdf8;
+      --blue-soft: rgba(56, 189, 248, 0.14);
+      --purple: #a855f7;
+      --purple-soft: rgba(168, 85, 247, 0.14);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+      background: var(--bg-main);
+      color: var(--text-main);
+      display: flex;
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 280px;
+      background: var(--bg-sidebar);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      z-index: 50;
+      transition: transform 0.25s ease;
+    }
+
+    .brand {
+      padding: 20px 22px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--accent-soft);
+      border: 1px solid var(--accent);
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      font-size: 18px;
+    }
+
+    .brand-title {
+      font-weight: 700;
+      font-size: 16px;
+      letter-spacing: 0.2px;
+    }
+
+    .brand-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .search-box {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .search-box input {
+      width: 100%;
+      background: var(--bg-main);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 9px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .search-box input:focus {
+      border-color: var(--accent);
+    }
+
+    .nav-list {
+      padding: 14px 12px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .nav-group-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+      padding: 8px 10px 6px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      margin-bottom: 4px;
+      transition: all 0.15s ease;
+    }
+
+    .nav-item:hover {
+      background: var(--bg-hover);
+      color: var(--text-main);
+    }
+
+    .nav-item.active {
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    /* Main Content */
+    .main {
+      margin-left: 280px;
+      flex: 1;
+      padding: 36px 48px 80px;
+      max-width: 1040px;
+    }
+
+    .mobile-bar {
+      display: none;
+      background: var(--bg-sidebar);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 18px;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 40;
+    }
+
+    .menu-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .breadcrumb {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      font-size: 30px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .lead {
+      color: var(--text-muted);
+      font-size: 15px;
+      margin-bottom: 26px;
+    }
+
+    /* Info Cards */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 18px;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .stat-value {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .callout {
+      background: var(--gold-soft);
+      border-left: 4px solid var(--gold);
+      padding: 14px 18px;
+      border-radius: 8px;
+      margin-bottom: 26px;
+      font-size: 14px;
+    }
+
+    .callout strong { color: var(--gold); }
+
+    /* Command List */
+    .section-title {
+      font-size: 18px;
+      margin: 26px 0 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .cmd-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .cmd-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      transition: border-color 0.15s ease;
+    }
+
+    .cmd-card:hover {
+      border-color: #384158;
+    }
+
+    .cmd-left {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .cmd-top {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    code.cmd-code {
+      font-family: "JetBrains Mono", Consolas, monospace;
+      background: var(--bg-main);
+      border: 1px solid var(--border);
+      color: #6ee7b7;
+      padding: 4px 9px;
+      border-radius: 6px;
+      font-size: 13.5px;
+      font-weight: 600;
+    }
+
+    .badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 99px;
+    }
+
+    .badge-all { background: var(--blue-soft); color: var(--blue); }
+    .badge-mayor { background: var(--accent-soft); color: var(--accent); }
+    .badge-king { background: var(--gold-soft); color: var(--gold); }
+    .badge-plot { background: var(--purple-soft); color: var(--purple); }
+
+    .cmd-desc {
+      font-size: 13.5px;
+      color: var(--text-muted);
+    }
+
+    .copy-btn {
+      background: var(--bg-main);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 6px 11px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+
+    .copy-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .page-section { display: none; }
+    .page-section.active { display: block; }
+
+    .pager {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      gap: 12px;
+    }
+
+    .pager-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 12px 18px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .pager-btn:hover { border-color: var(--accent); }
+
+    @media (max-width: 860px) {
+      body { flex-direction: column; }
+      .mobile-bar { display: flex; }
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-left: 0; padding: 24px 18px 60px; }
+      .cmd-card { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="mobile-bar">
+    <strong>🌍 Towny Wiki</strong>
+    <button class="menu-btn" onclick="toggleSidebar()">☰ Menü</button>
+  </div>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-icon">🌍</div>
+      <div>
+        <div class="brand-title">Towny Wiki</div>
+        <div class="brand-sub">Sunucu Rehberi & Komutlar</div>
+      </div>
+    </div>
+
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="Komut ara... (örn: /t claim, kese)" oninput="filterCommands()" />
+    </div>
+
+    <nav class="nav-list">
+      <div class="nav-group-label">Rehber</div>
+      <div class="nav-item active" data-target="genel" onclick="switchPage('genel', this)">🌍 Başlangıç & Ekonomi</div>
+      <div class="nav-group-label">Towny Komutları</div>
+      <div class="nav-item" data-target="town" onclick="switchPage('town', this)">🏘️ Town (Kasaba) Komutları</div>
+      <div class="nav-item" data-target="nation" onclick="switchPage('nation', this)">🏰 Nation (Ulus) Komutları</div>
+      <div class="nav-item" data-target="plot" onclick="switchPage('plot', this)">🧱 Arsa (Plot) Komutları</div>
+      <div class="nav-item" data-target="vatandas" onclick="switchPage('vatandas', this)">👤 Vatandaş & Pazar Komutları</div>
+    </nav>
+  </aside>
+
+  <main class="main">
+
+    <!-- 1. BAŞLANGIÇ & EKONOMİ -->
+    <section class="page-section active" id="page-genel">
+      <div class="breadcrumb">Towny Wiki / Başlangıç & Ekonomi</div>
+      <h1>🌍 Towny Nedir & Nasıl Başlanır?</h1>
+      <p class="lead">Kendi kasabanı kur, arazilerini koruma altına al, diğer kasabalarla birleşerek imparatorluğunu (ulusunu) kur ve ticarete yön ver.</p>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Kasaba Kurma Ücreti</div>
+          <div class="stat-value">300$</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Günlük Kasaba Vergisi</div>
+          <div class="stat-value">0$ (Vergisiz)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Altın Kuru (/kese)</div>
+          <div class="stat-value">1 Altın = 10$</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Pazar İlan Limiti</div>
+          <div class="stat-value">10 Eşya (/ah)</div>
+        </div>
+      </div>
+
+    
+
+      <h2 class="section-title">Adım Adım İlk Kasaba Kurulumu</h2>
+      <div class="cmd-list">
+        <div class="cmd-card">
+          <div class="cmd-left">
+            <div class="cmd-top"><code class="cmd-code">/rtp</code><span class="badge badge-all">Herkes</span></div>
+            <div class="cmd-desc">Haritada boş ve sahipsiz rastgele bir bölgeye ışınlanmanı sağlar.</div>
+          </div>
+          <button class="copy-btn" onclick="copyCmd('/rtp', this)">Kopyala</button>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-left">
+            <div class="cmd-top"><code class="cmd-code">/kese bozdur hepsi</code><span class="badge badge-all">Herkes</span></div>
+            <div class="cmd-desc">Envanterindeki tüm altın külçelerini nakit bakiyeye çevirir (1 Altın = 10$).</div>
+          </div>
+          <button class="copy-btn" onclick="copyCmd('/kese bozdur hepsi', this)">Kopyala</button>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-left">
+            <div class="cmd-top"><code class="cmd-code">/t new &lt;kasaba_adı&gt;</code><span class="badge badge-all">300$</span></div>
+            <div class="cmd-desc">Bulunduğun chunk merkezli yeni bir kasaba kurar.</div>
+          </div>
+          <button class="copy-btn" onclick="copyCmd('/t new ', this)">Kopyala</button>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-left">
+            <div class="cmd-top"><code class="cmd-code">/t claim</code><span class="badge badge-mayor">Başkan</span></div>
+            <div class="cmd-desc">Kasabana bitişik yeni bir chunk (16x16 alan) daha sahiplenir.</div>
+          </div>
+          <button class="copy-btn" onclick="copyCmd('/t claim', this)">Kopyala</button>
+        </div>
+      </div>
+
+      <div class="pager">
+        <div></div>
+        <button class="pager-btn" onclick="navTo('town')">Sonraki: 🏘️ Town (Kasaba) Komutları →</button>
+      </div>
+    </section>
+
+    <!-- 2. TOWN KOMUTLARI -->
+    <section class="page-section" id="page-town">
+      <div class="breadcrumb">Towny Wiki / Town (Kasaba) Komutları</div>
+      <h1>🏘️ Town (Kasaba) Komutları</h1>
+      <p class="lead">Kasaba kurma, arazi genişletme, oyuncu davet etme, rütbe verme ve kasaba güvenliği komutlarının tamamı.</p>
+
+      <h2 class="section-title">Genel & Arazi Komutları</h2>
+      <div class="cmd-list">
+        <div class="cmd-card">
+          <div class="cmd-left">
+            <div class="cmd-top"><code class="cmd-code">/t</code><span class="badge badge-all">Herkes</span></div>
+            <div class="cmd-desc">Kendi kasabanın bilgilerini, üyelerini, bankasını ve ayarlarını gösterir.</div>
+          </div>
+          <button class="copy-btn" onclick="copyCmd('/t', this)">Kopyala</button>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-left">
+            <div class="cmd-top"><code class="cmd-code">/t &lt;kasaba_adı&gt;</code><span class="badge badge-all">Herkes</span></div>
+            <div class="cmd-desc">Başka bir kasabanın bilgilerini ve başkanını görüntüler.</div>
+          </div>
+          <button class="copy-btn" onclick="copyCmd('/t ', this)">Kopyala</button>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-left">
+            <div class="cmd-top"><code class="cmd-code">/t list</code><span class="badge badge-all">Herkes</span></div>
+            <div class="cmd-desc">Sunucuda kurulu tüm aktif kasabaları listeler.</div>
+          </div>
+          <button class="copy-btn" onclick="copyCmd('/t list', this)">Kopyala</button>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-left">
+            <div class="cmd-top"><code class="cmd-code">/t spawn</code><span class="badge badge-all">Üye</span></div>
+            <div class="cmd-desc">Kendi kasabanın doğuş (spawn) noktasına ışınlanır.</div>
+          </div>
+          <button class="copy-btn" onclick="copyCmd('/t spawn', this)">Kopyala</button>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-left">
+            <div class="cmd-top"><code class="cmd-code">/t spawn &lt;kasaba_adı&gt;</code><span class="badge badge-all">Herkes</span></div>
+            <div class="cmd-desc">Ziyarete açık (public) olan başka bir kasabanın spawn noktasına ışınlanır.</div>
+          </div>
+          <button class="copy-btn" onclick="copyCmd('/t spawn ', this)">Kopyala</button>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-left">
+            <div class="cmd-top"><code class="cmd-code">/t claim</code><span class="badge badge-mayor">Başkan</span></div>
+            <div class="cmd-desc">Üzerinde durduğun 16x16 chunk alanını kasabana katar.</div>
+          </div>
+          <button class="copy-btn" onclick="copyCmd('/t claim', this)">Kopyala</button>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-left">
+            <div class="cmd-top"><code class="cmd-code">/t claim outpost</code><span class="badge badge-mayor">Başkan</span></div>
+            <div class="cmd-desc">Kasabadan uzakta bağımsız bir karakol (outpost) arazisi alır.</div>
+          </div>
+          <button class="copy-btn" onclick="copyCmd('/t claim outpost', this)">Kopyala</button>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-left">
+            <div class="cmd-top"><code class="cmd-code">/t unclaim</code><span class="badge badge-mayor">Başkan</span></div>
+            <div class="cmd-desc">Üzerinde durduğun chunk arazisini kasabadan çıkarır.</div>
+          </div>
+          <button class="copy-btn" onclick="copyCmd('/t unclaim', this)">Kopyala</button>
+        </div>
+      </div>
+
+      <h2 class="section-title">Üye, Rütbe & Banka Yönetimi</h2>
+      <div class="cmd-list">
+        <div class="cmd-card">
+          <div class="cmd-left">
+            <div class="cmd-top"><code class="cmd-code">/t add &lt;oyuncu&gt;</code><span class="badge badge-mayor">Başkan</span></div>
+            <div class="cmd-desc">Bir oyuncuyu kasabana davet eder.</div>
+          </div>
+          <button class="copy-btn" onclick="copyCmd('/t add ', this)">Kopyala</button>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-left">
+            <div class="cmd-top"><code class="cmd-code">/t kick &lt;oyuncu&gt;</code><span class="badge badge-mayor">Başkan</span></div>
+            <div class="cmd-desc">Seçilen oyuncuyu kasabadan atar.</div>
+          </div>
+          <button class="copy-btn" onclick="copyCmd('/t kick ', this)">Kopyala</button>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-left">
+            <div class="cmd-top"><code class="cmd-code">/t rank add &lt;oyuncu&gt; &lt;rütbe&gt;</code><span class="badge badge-mayor">Başkan</span></div>
+            <div class="cmd-desc">Oyuncuya kasaba içi rütbe verir (örnek rütbeler: <code>co-mayor</code>, <code>assistant</code>, <code>builder</code>).</div>
+          </div>
+          <button class="copy-btn" onclick="copyCmd('/t rank add ', this)">Kopyala</button>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-left">
+            <div class="cmd-top"><code class="cmd-code">/t deposit &lt;miktar&gt;</code><span class="badge badge-all">Üye</span></div>
+            <div class="cmd-desc">Kendi bakiyenden kasaba bankasına para yatırır.</div>
+          </div>
+          <button class="copy-btn" onclick="copyCmd('/t deposit ', this)">Kopyala</button>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-left">
+            <div class="cmd-top"><code class="cmd-code">/t withdraw &lt;miktar&gt;</code><span class="badge badge-mayor">Başkan</span></div>
+            <div class="cmd-desc">Kasaba bankasından kendi hesabına para çeker.</div>
+          </div>
+          <button class="copy-btn" onclick="copyCmd('/t withdraw ', this)">Kopyala</button>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-left">
+            <div class="cmd-top"><code class="cmd-code">/tc</code><span class="badge badge-all">Üye</span></div>
+            <div class="cmd-desc">Sadece kasaba üyelerinin görebildiği özel kasaba sohbetine geçer (çıkmak için <code>/g</code>).</div>
+          </div>
+          <button class="copy-btn" onclick="copyCmd('/tc', this)">Kopyala</button>
+        </div>
+      </div>
+
+      <h2 class="section-title">Kasaba Ayarları (Set & Toggle)</h2>
+      <div class="cmd-list">
+        <div class="cmd-card">
+          <div class="cmd-left">
+            <div class="cmd-top"><code class="cmd-code">/t set spawn</code><span class="badge badge-mayor">Başkan</span></div>
+            <div class="cmd-desc">Durduğun yeri kasabanın yeni spawn noktası olarak ayarlar.</div>
+          </div>
+          <button class="copy-btn" onclick="copyCmd('/t set spawn', this)">Kopyala</button>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-left">
+            <div class="cmd-top"><code class="cmd-code">/t set mayor &lt;oyuncu&gt;</code><span class="badge badge-mayor">Başkan</span></div>
+            <div class="cmd-desc">Kasaba başkanlığını başka bir kasaba üyesine devreder.</div>
+          </div>
+          <button class="copy-btn" onclick="copyCmd('/t set mayor ', this)">Kopyala</button>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-left">
+            <div class="cmd-top"><code class="cmd-code">/t set name &lt;yeni_ad&gt;</code><span class="badge badge-mayor">Başkan</span></div>
+            <div class="cmd-desc">Kasabanın adını değiştirir.</div>
+          </div>
+          <button class="copy-btn" onclick="copyCmd('/t set name ', this)">Kopyala</button>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-left">
+            <div class="cmd-top"><code class="cmd-code">/t toggle pvp / explosion / fire / mobs</code><span class="badge badge-mayor">Başkan</span></div>
+            <div class="cmd-desc">Kasaba sınırları içinde PvP, patlama, ateş yayılımı ve canavar doğmasını açıp kapatır.</div>
+          </div>
+          <button class="copy-btn" onclick="copyCmd('/t toggle pvp', this)">Kopyala</button>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-left">
+            <div class="cmd-top"><code class="cmd-code">/t toggle public / open</code><span class="badge badge-mayor">Başkan</span></div>
+            <div class="cmd-desc"><code>public</code> dışarıdan <code>/t spawn</code> ile ışınlanmayı, <code>open</code> ise davetsiz katılımı açar.</div>
+          </div>
+          <button class="copy-btn" onclick="copyCmd('/t toggle public', this)">Kopyala</button>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-left">
+            <div class="cmd-top"><code class="cmd-code">/t leave</code> / <code class="cmd-code">/t delete</code><span class="badge badge-all">Üye / Başkan</span></div>
+            <div class="cmd-desc"><code>/t leave</code> kasabadan ayrılmanı sağlar; <code>/t delete</code> kasabayı tamamen siler.</div>
+          </div>
+          <button class="copy-btn" onclick="copyCmd('/t leave', this)">Kopyala</button>
+        </div>
+      </div>
+
+      <div class="pager">
+        <button class="pager-btn" onclick="navTo('genel')">← Önceki: 🌍 Başlangıç & Ekonomi</button>
+        <button class="pager-btn" onclick="navTo('nation')">Sonraki: 🏰 Nation (Ulus) Komutları →</button>
+      </div>
+    </section>
+
+    <!-- 3. NATION KOMUTLARI -->
+    <section class="page-section" id="page-nation">
+      <div class="breadcrumb">Towny Wiki / Nation (Ulus) Komutları</div>
+      <h1>🏰 Nation (Ulus / İmparatorluk) Komutları</h1>
+      <p class="lead">Birden fazla kasabayı tek çatı altında toplayarak imparatorluğunu kur, müttefikler edin ve düşmanlarını belirle.</p>
+
+      <div class="cmd-list">
+        <div class="cmd-card">
+          <div class="cmd-left">
+            <div class="cmd-top"><code class="cmd-code">/n new &lt;ulus_adı&gt;</code><span class="badge badge-mayor">Başkan</span></div>
+            <div class="cmd-desc">Kendi kasabanı başkent yaparak yeni bir ulus (imparatorluk) kurar.</div>
+          </div>
+          <button class="copy-btn" onclick="copyCmd('/n new ', this)">Kopyala</button>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-left">
+            <div class="cmd-top"><code class="cmd-code">/n</code> / <code class="cmd-code">/n &lt;ulus_adı&gt;</code><span class="badge badge-all">Herkes</span></div>
+            <div class="cmd-desc">Kendi ulusunun veya başka bir ulusun başkentini, kralını ve üye kasabalarını gösterir.</div>
+          </div>
+          <button class="copy-btn" onclick="copyCmd('/n', this)">Kopyala</button>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-left">
+            <div class="cmd-top"><code class="cmd-code">/n add &lt;kasaba_adı&gt;</code><span class="badge badge-king">Kral</span></div>
+            <div class="cmd-desc">Başka bir kasabayı ulusuna katılmaya davet eder.</div>
+          </div>
+          <button class="copy-btn" onclick="copyCmd('/n add ', this)">Kopyala</button>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-left">
+            <div class="cmd-top"><code class="cmd-code">/n kick &lt;kasaba_adı&gt;</code><span class="badge badge-king">Kral</span></div>
+            <div class="cmd-desc">Seçilen kasabayı ulustan çıkarır.</div>
+          </div>
+          <button class="copy-btn" onclick="copyCmd('/n kick ', this)">Kopyala</button>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-left">
+            <div class="cmd-top"><code class="cmd-code">/n ally add &lt;ulus_adı&gt;</code><span class="badge badge-king">Kral</span></div>
+            <div class="cmd-desc">Başka bir ulusu müttefik olarak ekler (kaldırmak için <code>/n ally remove</code>).</div>
+          </div>
+          <button class="copy-btn" onclick="copyCmd('/n ally add ', this)">Kopyala</button>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-left">
+            <div class="cmd-top"><code class="cmd-code">/n enemy add &lt;ulus_adı&gt;</code><span class="badge badge-king">Kral</span></div>
+            <div class="cmd-desc">Başka bir ulusu düşman ilan eder (kaldırmak için <code>/n enemy remove</code>).</div>
+          </div>
+          <button class="copy-btn" onclick="copyCmd('/n enemy add ', this)">Kopyala</button>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-left">
+            <div class="cmd-top"><code class="cmd-code">/n spawn</code><span class="badge badge-all">Ulus Üyesi</span></div>
+            <div class="cmd-desc">Ulus başkentinin spawn noktasına ışınlanır.</div>
+          </div>
+          <button class="copy-btn" onclick="copyCmd('/n spawn', this)">Kopyala</button>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-left">
+            <div class="cmd-top"><code class="cmd-code">/n set king &lt;oyuncu&gt;</code><span class="badge badge-king">Kral</span></div>
+            <div class="cmd-desc">Ulus krallığını başka bir oyuncuya devreder.</div>
+          </div>
+          <button class="copy-btn" onclick="copyCmd('/n set king ', this)">Kopyala</button>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-left">
+            <div class="cmd-top"><code class="cmd-code">/nc</code><span class="badge badge-all">Ulus Üyesi</span></div>
+            <div class="cmd-desc">Tüm ulus üyelerinin görebildiği ortak ulus sohbet kanalına geçer (çıkmak için <code>/g</code>).</div>
+          </div>
+          <button class="copy-btn" onclick="copyCmd('/nc', this)">Kopyala</button>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-left">
+            <div class="cmd-top"><code class="cmd-code">/n leave</code> / <code class="cmd-code">/n delete</code><span class="badge badge-mayor">Başkan / Kral</span></div>
+            <div class="cmd-desc"><code>/n leave</code> kasabanı ulustan ayırır; <code>/n delete</code> ulusu tamamen dağıtır.</div>
+          </div>
+          <button class="copy-btn" onclick="copyCmd('/n leave', this)">Kopyala</button>
+        </div>
+      </div>
+
+      <div class="pager">
+        <button class="pager-btn" onclick="navTo('town')">← Önceki: 🏘️ Town (Kasaba) Komutları</button>
+        <button class="pager-btn" onclick="navTo('plot')">Sonraki: 🧱 Arsa (Plot) Komutları →</button>
+      </div>
+    </section>
+
+    <!-- 4. ARSA (PLOT) KOMUTLARI -->
+    <section class="page-section" id="page-plot">
+      <div class="breadcrumb">Towny Wiki / Arsa (Plot) Komutları</div>
+      <h1>🧱 Arsa (Plot) Komutları</h1>
+      <p class="lead">Kasaba içindeki chunk'ları vatandaşlarına satabilir, arena veya tarım alanı olarak özel türlere ayırabilirsin.</p>
+
+      <div class="cmd-list">
+        <div class="cmd-card">
+          <div class="cmd-left">
+            <div class="cmd-top"><code class="cmd-code">/plot fs &lt;fiyat&gt;</code><span class="badge badge-mayor">Başkan</span></div>
+            <div class="cmd-desc">Üzerinde durduğun chunk arsasını belirlediğin fiyattan satışa çıkarır.</div>
+          </div>
+          <button class="copy-btn" onclick="copyCmd('/plot fs ', this)">Kopyala</button>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-left">
+            <div class="cmd-top"><code class="cmd-code">/plot nfs</code><span class="badge badge-mayor">Başkan</span></div>
+            <div class="cmd-desc">Satışa çıkarılan arsayı satıştan kaldırır.</div>
+          </div>
+          <button class="copy-btn" onclick="copyCmd('/plot nfs', this)">Kopyala</button>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-left">
+            <div class="cmd-top"><code class="cmd-code">/plot claim</code><span class="badge badge-all">Kasaba Üyesi</span></div>
+            <div class="cmd-desc">Kasabanda satışa çıkarılmış olan arsayı satın alır.</div>
+          </div>
+          <button class="copy-btn" onclick="copyCmd('/plot claim', this)">Kopyala</button>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-left">
+            <div class="cmd-top"><code class="cmd-code">/plot unclaim</code><span class="badge badge-plot">Arsa Sahibi</span></div>
+            <div class="cmd-desc">Sahip olduğun arsayı bırakıp tekrar kasabaya devreder.</div>
+          </div>
+          <button class="copy-btn" onclick="copyCmd('/plot unclaim', this)">Kopyala</button>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-left">
+            <div class="cmd-top"><code class="cmd-code">/plot set arena / shop / farm / embassy</code><span class="badge badge-mayor">Başkan</span></div>
+            <div class="cmd-desc">Arsanın türünü değiştirir (<code>arena</code> PvP alanı, <code>shop</code> dükkan, <code>farm</code> tarım, <code>embassy</code> elçilik).</div>
+          </div>
+          <button class="copy-btn" onclick="copyCmd('/plot set arena', this)">Kopyala</button>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-left">
+            <div class="cmd-top"><code class="cmd-code">/plot toggle pvp / explosion / fire / mobs</code><span class="badge badge-plot">Arsa Sahibi</span></div>
+            <div class="cmd-desc">Sadece o arsaya özel PvP, patlama, ateş ve canavar kurallarını ayarlar.</div>
+          </div>
+          <button class="copy-btn" onclick="copyCmd('/plot toggle pvp', this)">Kopyala</button>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-left">
+            <div class="cmd-top"><code class="cmd-code">/plot perm</code><span class="badge badge-plot">Arsa Sahibi</span></div>
+            <div class="cmd-desc">Arsadaki blok kırma, sandık açma ve şalter kullanma izinlerini detaylı gösterir.</div>
+          </div>
+          <button class="copy-btn" onclick="copyCmd('/plot perm', this)">Kopyala</button>
+        </div>
+      </div>
+
+      <div class="pager">
+        <button class="pager-btn" onclick="navTo('nation')">← Önceki: 🏰 Nation (Ulus) Komutları</button>
+        <button class="pager-btn" onclick="navTo('vatandas')">Sonraki: 👤 Vatandaş & Pazar Komutları →</button>
+      </div>
+    </section>
+
+    <!-- 5. VATANDAŞ & PAZAR KOMUTLARI -->
+    <section class="page-section" id="page-vatandas">
+      <div class="breadcrumb">Towny Wiki / Vatandaş & Pazar Komutları</div>
+      <h1>👤 Vatandaş, Kese & Pazar Komutları</h1>
+      <p class="lead">Kişisel Towny ayarların, arkadaş ekleme, altın bozdurma ve açık artırma pazarı komutları.</p>
+
+      <h2 class="section-title">Kese & Ticaret Komutları</h2>
+      <div class="cmd-list">
+        <div class="cmd-card">
+          <div class="cmd-left">
+            <div class="cmd-top"><code class="cmd-code">/kese</code><span class="badge badge-all">Herkes</span></div>
+            <div class="cmd-desc">Mevcut bakiyeni ve envanterindeki altınların toplam değerini gösterir.</div>
+          </div>
+          <button class="copy-btn" onclick="copyCmd('/kese', this)">Kopyala</button>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-left">
+            <div class="cmd-top"><code class="cmd-code">/kese bozdur &lt;miktar / hepsi&gt;</code><span class="badge badge-all">Herkes</span></div>
+            <div class="cmd-desc">Envanterindeki altın külçelerini nakit paraya çevirir (1 Altın = 10$).</div>
+          </div>
+          <button class="copy-btn" onclick="copyCmd('/kese bozdur hepsi', this)">Kopyala</button>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-left">
+            <div class="cmd-top"><code class="cmd-code">/kese cek &lt;miktar&gt;</code><span class="badge badge-all">Herkes</span></div>
+            <div class="cmd-desc">Bakiyeni tekrar fiziksel altın külçesine çevirip envanterine alır.</div>
+          </div>
+          <button class="copy-btn" onclick="copyCmd('/kese cek ', this)">Kopyala</button>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-left">
+            <div class="cmd-top"><code class="cmd-code">/ah</code><span class="badge badge-all">Herkes</span></div>
+            <div class="cmd-desc">Küresel oyuncu pazarını açar; diğer oyuncuların ilanlarını satın alabilirsin.</div>
+          </div>
+          <button class="copy-btn" onclick="copyCmd('/ah', this)">Kopyala</button>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-left">
+            <div class="cmd-top"><code class="cmd-code">/ah sell &lt;fiyat&gt;</code><span class="badge badge-all">Herkes</span></div>
+            <div class="cmd-desc">Elindeki eşyayı belirlediğin fiyattan pazara koyar (aynı anda en fazla 5 ilan).</div>
+          </div>
+          <button class="copy-btn" onclick="copyCmd('/ah sell ', this)">Kopyala</button>
+        </div>
+      </div>
+
+      <h2 class="section-title">Vatandaş & Işınlanma Komutları</h2>
+      <div class="cmd-list">
+        <div class="cmd-card">
+          <div class="cmd-left">
+            <div class="cmd-top"><code class="cmd-code">/res</code> / <code class="cmd-code">/res &lt;oyuncu&gt;</code><span class="badge badge-all">Herkes</span></div>
+            <div class="cmd-desc">Kendi veya başka bir oyuncunun kasabasını, rütbesini ve arkadaş listesini gösterir.</div>
+          </div>
+          <button class="copy-btn" onclick="copyCmd('/res', this)">Kopyala</button>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-left">
+            <div class="cmd-top"><code class="cmd-code">/res friend add &lt;oyuncu&gt;</code><span class="badge badge-all">Herkes</span></div>
+            <div class="cmd-desc">Bir oyuncuyu arkadaş listene ekler (arsanda yapı ve sandık izni verir).</div>
+          </div>
+          <button class="copy-btn" onclick="copyCmd('/res friend add ', this)">Kopyala</button>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-left">
+            <div class="cmd-top"><code class="cmd-top"><code class="cmd-code">/res toggle map</code><span class="badge badge-all">Herkes</span></div>
+            <div class="cmd-desc">Chunk sınırlarını gezerken sohbette otomatik mini harita görünümünü açar/kapatır.</div>
+          </div>
+          <button class="copy-btn" onclick="copyCmd('/res toggle map', this)">Kopyala</button>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-left">
+            <div class="cmd-top"><code class="cmd-code">/sethome</code> / <code class="cmd-code">/home</code><span class="badge badge-all">Herkes</span></div>
+            <div class="cmd-desc">Bulunduğun konumu ev olarak kaydeder ve istediğin zaman geri ışınlanır.</div>
+          </div>
+          <button class="copy-btn" onclick="copyCmd('/sethome', this)">Kopyala</button>
+        </div>
+        <div class="cmd-card">
+          <div class="cmd-left">
+            <div class="cmd-top"><code class="cmd-code">/tpa &lt;oyuncu&gt;</code> / <code class="cmd-code">/tpaccept</code><span class="badge badge-all">Herkes</span></div>
+            <div class="cmd-desc">Bir oyuncuya ışınlanma isteği gönderir veya gelen isteği kabul eder.</div>
+          </div>
+          <button class="copy-btn" onclick="copyCmd('/tpa ', this)">Kopyala</button>
+        </div>
+      </div>
+
+      <div class="pager">
+        <button class="pager-btn" onclick="navTo('plot')">← Önceki: 🧱 Arsa (Plot) Komutları</button>
+        <div></div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    function switchPage(pageId, el) {
+      document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById('page-' + pageId).classList.add('active');
+      if (el) el.classList.add('active');
+      document.getElementById('sidebar').classList.remove('open');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function navTo(pageId) {
+      const targetNav = document.querySelector(`.nav-item[data-target="${pageId}"]`);
+      switchPage(pageId, targetNav);
+    }
+
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('open');
+    }
+
+    function copyCmd(text, btn) {
+      navigator.clipboard.writeText(text);
+      const old = btn.innerText;
+      btn.innerText = 'Kopyalandı!';
+      btn.style.borderColor = '#22c55e';
+      btn.style.color = '#22c55e';
+      setTimeout(() => {
+        btn.innerText = old;
+        btn.style.borderColor = '';
+        btn.style.color = '';
+      }, 1200);
+    }
+
+    function filterCommands() {
+      const q = document.getElementById('searchInput').value.toLowerCase().trim();
+      const cards = document.querySelectorAll('.cmd-card');
+      const sections = document.querySelectorAll('.page-section');
+
+      if (q === '') {
+        cards.forEach(c => c.style.display = 'flex');
+        const activeNav = document.querySelector('.nav-item.active');
+        sections.forEach(s => s.classList.remove('active'));
+        if (activeNav) {
+          document.getElementById('page-' + activeNav.dataset.target).classList.add('active');
+        }
+        return;
+      }
+
+      sections.forEach(s => s.classList.add('active'));
+      cards.forEach(card => {
+        const text = card.innerText.toLowerCase();
+        card.style.display = text.includes(q) ? 'flex' : 'none';
+      });
+    }
+  </script>
+</body>
+</html>
